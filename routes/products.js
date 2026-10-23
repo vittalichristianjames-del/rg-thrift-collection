@@ -1,4 +1,5 @@
 const express = require('express');
+const { Op } = require('sequelize');
 const router = express.Router();
 const { Product } = require('../models');
 
@@ -7,7 +8,7 @@ router.get('/', async (req, res) => {
     const { category, search } = req.query;
     const where = {};
     if (category) where.category = category;
-    if (search) where.name = { [require('sequelize').Op.like]: `%${search}%` };
+    if (search) where.name = { [Op.like]: `%${search}%` };
     const products = await Product.findAll({ where, order: [['createdAt', 'DESC']] });
     const categories = await Product.findAll({ attributes: ['category'], group: ['category'] });
     res.render('products', { title: 'Products', products, categories: categories.map(c => c.category) });
