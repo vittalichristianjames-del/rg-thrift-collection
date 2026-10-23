@@ -1,0 +1,53 @@
+<div class="row">
+  <div class="col-md-12">
+    <h2>Admin Dashboard</h2>
+    <a href="/admin/products/new" class="btn btn-primary mb-3">Add New Product</a>
+    <h3>Products</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% products.forEach(product => { %>
+          <tr>
+            <td><%= product.name %></td>
+            <td>$<%= parseFloat(product.price).toFixed(2) %></td>
+            <td><%= product.stock %></td>
+            <td>
+              <a href="/admin/products/<%= product.id %>/edit" class="btn btn-sm btn-warning">Edit</a>
+              <form action="/admin/products/<%= product.id %>/delete" method="POST" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+              </form>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <h3>Recent Orders</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Customer</th>
+          <th>Total</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% orders.forEach(order => { %>
+          <tr>
+            <td><%= order.id %></td>
+            <td><%= order.User ? order.User.name : 'Guest' %></td>
+            <td>$<%= parseFloat(order.total).toFixed(2) %></td>
+            <td><%= order.status %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
