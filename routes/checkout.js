@@ -15,9 +15,11 @@ const {
 } = require('../services/commerce');
 const { sendOrderConfirmation } = require('../services/email');
 
+const uploadsRoot = process.env.UPLOADS_PATH || path.join(__dirname, '../public/uploads');
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../public/uploads/receipts');
+    const dir = path.join(uploadsRoot, 'receipts');
     fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
