@@ -1,47 +1,154 @@
+<%
+  const pageTitle = typeof title !== 'undefined' && title ? title : 'RG Thrift Collection';
+  const routePath = typeof currentPath !== 'undefined' && currentPath ? currentPath : '';
+  const cartData = typeof cart !== 'undefined' && cart ? cart : { items: [] };
+  const cartItems = Array.isArray(cartData.items) ? cartData.items : [];
+  const calculatedCartCount = cartItems.reduce((total, item) => total + (Number(item && item.quantity) || 1), 0);
+  const visibleCartCount = typeof cartCount !== 'undefined' && Number.isFinite(Number(cartCount))
+    ? Number(cartCount)
+    : calculatedCartCount;
+  const currentUser = typeof user !== 'undefined' ? user : null;
+  const rawFlash = typeof flashMessages !== 'undefined' && Array.isArray(flashMessages) && flashMessages.length
+    ? flashMessages
+    : (typeof flash !== 'undefined' ? flash : null);
+  const flashEntries = [];
+
+  if (Array.isArray(rawFlash)) {
+    rawFlash.forEach(entry => {
+      if (entry) flashEntries.push(typeof entry === 'string' ? { type: 'success', message: entry } : entry);
+    });
+  } else if (rawFlash && typeof rawFlash === 'object') {
+    if (rawFlash.message) {
+      flashEntries.push(rawFlash);
+    } else {
+      Object.entries(rawFlash).forEach(([type, message]) => {
+        if (message) flashEntries.push({ type, message });
+      });
+    }
+  } else if (rawFlash) {
+    flashEntries.push({ type: 'success', message: rawFlash });
+  }
+%>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %> - RG Thrift Collection</title>
+  <meta name="theme-color" content="#263d35">
+  <title><%= pageTitle %> | RG Thrift Collection</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-      <a class="navbar-brand" href="/">RG Thrift Collection</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="/products">Products</a></li>
-          <li class="nav-item"><a class="nav-link" href="/cart">Cart</a></li>
-          <% if (user) { %>
-            <% if (user.role === 'admin') { %>
-              <li class="nav-item"><a class="nav-link" href="/admin">Admin</a></li>
-            <% } %>
-            <li class="nav-item"><a class="nav-link" href="/auth/logout">Logout (<%= user.name %>)</a></li>
-          <% } else { %>
-            <li class="nav-item"><a class="nav-link" href="/auth/login">Login</a></li>
-            <li class="nav-item"><a class="nav-link" href="/auth/register">Register</a></li>
-          <% } %>
-        </ul>
-      </div>
-    </div>
-  </nav>
+  <a class="skip-link" href="#main-content">Skip to content</a>
 
-  <main class="container mt-4">
+  <div class="announcement-bar">
+    <div class="container announcement-bar__inner">
+      <span>Pre-loved pieces, thoughtfully rehomed.</span>
+      <span class="announcement-bar__detail">One of one &middot; Ships across the Philippines</span>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <nav class="navbar navbar-expand-lg" aria-label="Primary navigation">
+      <div class="container">
+        <a class="brand" href="/" aria-label="RG Thrift Collection home">
+          <span class="brand__mark" aria-hidden="true">RG</span>
+          <span class="brand__copy">
+            <strong>RG Thrift</strong>
+            <small>Collection</small>
+          </span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#siteNavigation" aria-controls="siteNavigation" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="siteNavigation">
+          <ul class="navbar-nav mx-lg-auto site-nav">
+            <li class="nav-item">
+              <a class="nav-link <%= routePath === '/' ? 'is-active' : '' %>" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link <%= routePath.indexOf('/products') === 0 ? 'is-active' : '' %>" href="/products">Shop all</a>
+            </li>
+            <% if (currentUser && currentUser.role === 'admin') { %>
+              <li class="nav-item">
+                <a class="nav-link <%= routePath.indexOf('/admin') === 0 ? 'is-active' : '' %>" href="/admin">Studio</a>
+              </li>
+            <% } %>
+          </ul>
+
+          <div class="site-actions">
+            <% if (currentUser) { %>
+              <a class="site-action site-action--account" href="<%= currentUser.role === 'admin' ? '/admin' : '/orders' %>">
+                <span aria-hidden="true">&#9787;</span>
+                <span class="site-action__label">Hi, <%= (currentUser.name || 'there').split(' ')[0] %></span>
+              </a>
+            <% } else { %>
+              <a class="site-action site-action--account" href="/auth/login">
+                <span aria-hidden="true">&#9787;</span>
+                <span class="site-action__label">Account</span>
+              </a>
+            <% } %>
+            <a class="site-action site-action--cart <%= routePath.indexOf('/cart') === 0 ? 'is-active' : '' %>" href="/cart" aria-label="View cart, <%= visibleCartCount %> item<%= visibleCartCount === 1 ? '' : 's' %>">
+              <span aria-hidden="true">Bag</span>
+              <span class="cart-badge" data-cart-count><%= visibleCartCount %></span>
+            </a>
+            <% if (currentUser) { %>
+              <a class="site-action site-action--logout" href="/auth/logout">Sign out</a>
+            <% } else { %>
+              <a class="site-action site-action--register" href="/auth/register">Join us</a>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-content" class="site-main container">
+    <% flashEntries.forEach(entry => { %>
+      <% const alertType = ['error', 'danger'].includes(String(entry.type).toLowerCase()) ? 'error' : (String(entry.type).toLowerCase() === 'warning' ? 'warning' : 'success'); %>
+      <div class="flash-message flash-message--<%= alertType %>" role="<%= alertType === 'error' ? 'alert' : 'status' %>" data-flash-message>
+        <span aria-hidden="true"><%= alertType === 'error' ? '!' : alertType === 'warning' ? '!' : '✓' %></span>
+        <p><%= entry.message %></p>
+        <button class="flash-message__dismiss" type="button" aria-label="Dismiss notification" data-dismiss-flash>&times;</button>
+      </div>
+    <% }); %>
     <%- body %>
   </main>
 
-  <footer class="bg-dark text-white text-center py-3 mt-5">
-    <p>&copy; 2024 RG Thrift Collection. All rights reserved.</p>
+  <footer class="site-footer">
+    <div class="container site-footer__grid">
+      <div>
+        <a class="brand brand--footer" href="/">
+          <span class="brand__mark" aria-hidden="true">RG</span>
+          <span class="brand__copy"><strong>RG Thrift</strong><small>Collection</small></span>
+        </a>
+        <p class="site-footer__intro">Curated secondhand style with an honest fit story for every piece.</p>
+      </div>
+      <div>
+        <h2 class="footer-heading">Explore</h2>
+        <a href="/products">Shop all pieces</a>
+        <a href="/cart">Your bag</a>
+        <% if (currentUser) { %><a href="/orders">Order history</a><% } %>
+      </div>
+      <div>
+        <h2 class="footer-heading">Good to know</h2>
+        <p>Each piece is individually measured and available only once.</p>
+        <p class="site-footer__muted">Secure checkout with COD or GCash.</p>
+      </div>
+    </div>
+    <div class="container site-footer__bottom">
+      <span>&copy; <%= new Date().getFullYear() %> RG Thrift Collection</span>
+      <span>Made for second chances.</span>
+    </div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <% if (typeof recaptchaSiteKey !== 'undefined' && recaptchaSiteKey) { %>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <% } %>
   <script src="/js/main.js"></script>
 </body>
 </html>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 900" role="img" aria-labelledby="title desc">
+  <title id="title">Garment placeholder</title>
+  <desc id="desc">A simple illustrated shirt on a warm neutral background.</desc>
+  <rect width="720" height="900" fill="#eee9df"/>
+  <circle cx="585" cy="132" r="95" fill="#d7e1d4" opacity=".82"/>
+  <circle cx="118" cy="753" r="148" fill="#e8c49e" opacity=".55"/>
+  <path d="M268 225c22-24 47-36 92-36s70 12 92 36l89 63-62 125-51-31v302H292V382l-51 31-62-125z" fill="#526c5d"/>
+  <path d="M315 197c5 51 30 77 45 77s40-26 45-77" fill="none" stroke="#eee9df" stroke-width="13" stroke-linecap="round"/>
+  <path d="M291 685h137" stroke="#f7f4ed" stroke-width="9" opacity=".68"/>
+  <text x="360" y="790" text-anchor="middle" fill="#526c5d" font-family="Arial, sans-serif" font-size="25" font-weight="700" letter-spacing="5">RG THRIFT</text>
+</svg>

@@ -1,0 +1,57 @@
+<div class="row">
+  <div class="col-md-10">
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/orders">Order History</a></li>
+        <li class="breadcrumb-item active">Order <%= order.orderNumber || order.id %></li>
+      </ol>
+    </nav>
+
+    <h2>Order Details</h2>
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <p><strong>Order Number:</strong> <%= order.orderNumber || order.id %></p>
+        <p><strong>Order Date:</strong> <%= new Date(order.createdAt).toLocaleDateString() %></p>
+        <p><strong>Payment Method:</strong> <%= (order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'GCash') %></p>
+        <p><strong>Payment Status:</strong> <span class="badge bg-<%= order.paymentStatus === 'paid' ? 'success' : order.paymentStatus === 'awaiting_verification' ? 'warning' : 'secondary' %>"><%= order.paymentStatus || order.status %></span></p>
+      </div>
+      <div class="col-md-6">
+        <p><strong>Order Status:</strong> <span class="badge bg-<%= order.status === 'delivered' ? 'success' : order.status === 'cancelled' ? 'danger' : order.status === 'shipped' ? 'info' : 'primary' %>"><%= (order.status || 'pending').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) %></span></p>
+        <% if (order.trackingNumber) { %>
+          <p><strong>Tracking Number:</strong> <%= order.trackingNumber %></p>
+          <p><strong>Courier:</strong> <%= order.courier || 'N/A' %></p>
+          <p><strong>Estimated Delivery:</strong> <%= order.estimatedDelivery ? new Date(order.estimatedDelivery).toLocaleDateString() : 'N/A' %></p>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header"><strong>Items</strong></div>
+      <div class="card-body">
+        <table class="table">
+          <thead>
+            <tr><th>Product</th><th>Qty</th><th class="text-end">Unit Price</th><th class="text-end">Total</th></tr>
+          </thead>
+          <tbody>
+            <% order.items.forEach(item => { %>
+              <tr>
+                <td><%= item.productName %><br><small class="text-muted"><%= item.productCategory || '' %></small></td>
+                <td><%= item.quantity %></td>
+                <td class="text-end"><%= formatPHP(item.unitPrice) %></td>
+                <td class="text-end"><%= formatPHP(item.lineTotal) %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" class="text-end"><strong>Order Total:</strong></td>
+              <td class="text-end"><strong><%= formatPHP(order.total) %></strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <a href="/orders" class="btn btn-outline-secondary">Back to Order History</a>
+  </div>
+</div>

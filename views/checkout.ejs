@@ -1,40 +1,138 @@
 <div class="row">
   <div class="col-md-8">
     <h2>Checkout</h2>
+    <% if (error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
     <% if (!cart || !cart.items || cart.items.length === 0) { %>
-      <p>Your cart is empty. <a href="/products">Browse products</a></p>
+      <div class="empty-cart text-center py-5">
+        <h3>Your bag is empty</h3>
+        <a href="/products" class="btn btn-primary">Browse Products</a>
+      </div>
     <% } else { %>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Product</th>
-            <th>Price</th>
-            <th>Quantity</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% cart.items.forEach(item => { %>
-            <tr>
-              <td><%= item.Product.name %></td>
-              <td>$<%= parseFloat(item.Product.price).toFixed(2) %></td>
-              <td><%= item.quantity %></td>
-              <td>$<%= (parseFloat(item.Product.price) * item.quantity).toFixed(2) %></td>
-            </tr>
-          <% }); %>
-        </tbody>
-      </table>
-      <p class="lead">Total: $<%= cart.items.reduce((sum, item) => sum + (parseFloat(item.Product.price) * item.quantity), 0).toFixed(2) %></p>
-      <form action="/checkout" method="POST">
-        <div class="mb-3">
-          <label for="shippingAddress" class="form-label">Shipping Address (JSON format)</label>
-          <textarea class="form-control" id="shippingAddress" name="shippingAddress" rows="3" required>{"street":"","city":"","state":"","zip":"","country":""}</textarea>
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Order Summary</h5>
+          <table class="table table-sm">
+            <thead>
+              <tr><th>Product</th><th>Qty</th><th class="text-end">Total</th></tr>
+            </thead>
+            <tbody>
+              <% cart.items.forEach(item => { %>
+                <tr>
+                  <td><%= item.Product.name %></td>
+                  <td><%= item.quantity %></td>
+                  <td class="text-end"><%= formatPHP(item.Product.price * item.quantity) %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
         </div>
+      </div>
+
+      <form action="/checkout" method="POST" enctype="multipart/form-data" novalidate>
+        <div class="mb-4">
+          <h4 class="form-section">Delivery Details</h4>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Full Name</label>
+              <input type="text" class="form-control" name="contactName" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Phone Number</label>
+              <input type="tel" class="form-control" name="contactPhone" placeholder="+63 9xx xxx xxxx" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" name="contactEmail" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Shipping Region</label>
+              <select class="form-select" name="shippingRegion" required>
+                <option value="">Select region</option>
+                <% shippingRegions.forEach(region => { %>
+                  <option value="<%= region.key %>"><%= region.label %> (+<%= formatPHP(region.fee) %>)</option>
+                <% }); %>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <h4 class="form-section">Payment Method</h4>
+        <div class="payment-option">
+          <input type="radio" name="paymentMethod" id="cod" value="cod" checked>
+          <label for="cod" class="payment-label">
+            <strong>Cash on Delivery (COD)</strong><br>
+            <small>Pay the delivery person when your order arrives.</small>
+          </label>
+        </div>
+        <div class="payment-option mt-3">
+          <input type="radio" name="paymentMethod" id="gcash" value="gcash">
+          <label for="gcash" class="payment-label">
+            <strong>GCash</strong><br>
+            <small>Send payment via GCash and upload your receipt for verification.</small>
+          </label>
+        </div>
+
+        <div id="gcash-details" class="mt-3 p-3 bg-light rounded border" style="display:none;">
+          <h5 class="mb-3">GCash Payment Details</h5>
+          <p><strong>Account Name:</strong> <%= gcash.accountName || 'RG Thrift Collection' %></p>
+          <p><strong>Mobile Number:</strong> <%= gcash.mobileNumber || '+63 9xx xxx xxxx' %></p>
+          <% if (gcash.qrCodeUrl) { %>
+            <div class="text-center mb-3">
+              <img src="<%= gcash.qrCodeUrl %>" alt="GCash QR Code" class="img-fluid" style="max-width:200px;">
+              <p class="small mt-2">Scan to pay via GCash</p>
+            </div>
+          <% } %>
+          <div class="mb-3">
+            <label class="form-label">GCash Reference Number</label>
+            <input type="text" class="form-control" name="gcashReferenceNumber" placeholder="Enter your GCash reference number" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Upload Payment Receipt</label>
+            <input type="file" class="form-control" name="receipt" accept="image/jpeg,image/png" required>
+            <div class="form-text">JPEG or PNG only, max 5 MB.</div>
+          </div>
+        </div>
+      </div>
+
+      <% if (recaptchaSiteKey) { %>
         <div class="mb-3">
           <div class="g-recaptcha" data-sitekey="<%= recaptchaSiteKey %>"></div>
         </div>
-        <button type="submit" class="btn btn-success">Place Order</button>
-      </form>
+      <% } %>
+
+      <button type="submit" class="btn btn-success btn-lg">Place Order</button>
+      <a href="/cart" class="btn btn-outline-secondary">Back to Bag</a>
+    </form>
     <% } %>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const gcashRadio = document.getElementById('gcash');
+    const codRadio = document.getElementById('cod');
+    const gcashDetails = document.getElementById('gcash-details');
+    const receiptInput = document.querySelector('input[name="receipt"]');
+    const gcashRefInput = document.querySelector('input[name="gcashReferenceNumber"]');
+
+    function togglePayment() {
+      if (gcashRadio.checked) {
+        gcashDetails.style.display = 'block';
+        if (receiptInput) receiptInput.required = true;
+        if (gcashRefInput) gcashRefInput.required = true;
+      } else {
+        gcashDetails.style.display = 'none';
+        if (receiptInput) receiptInput.required = false;
+        if (gcashRefInput) gcashRefInput.required = false;
+      }
+    }
+
+    gcashRadio.addEventListener('change', togglePayment);
+    codRadio.addEventListener('change', togglePayment);
+    togglePayment();
+  });
+</script>

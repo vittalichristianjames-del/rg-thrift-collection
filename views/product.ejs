@@ -1,20 +1,62 @@
-<div class="row">
+<div class="row product-detail-row">
   <div class="col-md-6">
-    <img src="<%= product.image || 'https://via.placeholder.com/500' %>" class="img-fluid" alt="<%= product.name %>">
+    <div class="product-image-container">
+      <img src="<%= product.image || '/images/placeholder-garment.svg' %>" class="img-fluid" alt="<%= product.name %>">
+      <% if (product.images && product.images.length) { %>
+        <div class="image-gallery mt-3">
+          <% product.images.forEach(img => { %>
+            <img src="<%= img.url %>" class="gallery-thumb" alt="<%= img.alt || product.name %>" style="width:60px;height:60px;object-fit:cover;margin-right:8px;border:2px solid #ddd;border-radius:4px;">
+          <% }); %>
+        </div>
+      <% } %>
+    </div>
   </div>
   <div class="col-md-6">
+    <span class="badge bg-<%= isAvailable ? 'success' : product.status === 'sold' ? 'danger' : 'warning' %> mb-2">
+      <%= isAvailable ? 'Available' : product.status === 'sold' ? 'Sold' : 'Reserved' %>
+    </span>
     <h2><%= product.name %></h2>
-    <p class="lead">$<%= parseFloat(product.price).toFixed(2) %></p>
+    <p class="lead"><%= formatPHP(product.price) %></p>
     <p><%= product.description %></p>
+    <% if (product.condition) { %>
+      <p><strong>Condition:</strong> <span class="badge bg-secondary"><%= product.condition %></span></p>
+    <% } %>
     <p><strong>Category:</strong> <%= product.category %></p>
-    <p><strong>Stock:</strong> <%= product.stock %></p>
-    <form action="/cart/add" method="POST">
-      <input type="hidden" name="productId" value="<%= product.id %>">
-      <div class="mb-3">
-        <label for="quantity" class="form-label">Quantity</label>
-        <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1" max="<%= product.stock %>">
+    <p><strong>SKU:</strong> <%= product.id %></p>
+    <% if (Object.keys(measurements).length > 0) { %>
+      <div class="measurements-card p-3 bg-light rounded mt-4">
+        <h5 class="mb-3">Garment Measurements</h5>
+        <table class="table table-sm table-borderless">
+          <% if (measurements.chestWidth !== undefined) { %>
+            <tr><td><strong>Chest Width</strong></td><td class="text-end"><%= measurements.chestWidth %><span class="text-muted"> in</span></td></tr>
+          <% } %>
+          <% if (measurements.totalLength !== undefined) { %>
+            <tr><td><strong>Total Length</strong></td><td class="text-end"><%= measurements.totalLength %><span class="text-muted"> in</span></td></tr>
+          <% } %>
+          <% if (measurements.shoulderWidth !== undefined) { %>
+            <tr><td><strong>Shoulder Width</strong></td><td class="text-end"><%= measurements.shoulderWidth %><span class="text-muted"> in</span></td></tr>
+          <% } %>
+          <% if (measurements.inseam !== undefined) { %>
+            <tr><td><strong>Inseam</strong></td><td class="text-end"><%= measurements.inseam %><span class="text-muted"> in</span></td></tr>
+          <% } %>
+        </table>
+        <p class="text-muted small mt-2">Measurements taken flat. Compare with a similar garment you own for best fit.</p>
       </div>
-      <button type="submit" class="btn btn-primary">Add to Cart</button>
-    </form>
+    <% } %>
+    <% if (isAvailable) { %>
+      <form action="/cart/add" method="POST" class="mt-4">
+        <input type="hidden" name="productId" value="<%= product.id %>">
+        <div class="mb-3">
+          <label for="quantity" class="form-label">Quantity</label>
+          <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1" max="1" readonly>
+          <div class="form-text">One-of-one piece — quantity limited to 1.</div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg">Add to Bag</button>
+      </form>
+    <% } else if (product.status === 'reserved') { %>
+      <div class="alert alert-warning mt-4">This piece is currently reserved by another shopper. It may become available again if the reservation expires.</div>
+    <% } else { %>
+      <div class="alert alert-danger mt-4">This piece has been sold.</div>
+    <% } %>
   </div>
 </div>

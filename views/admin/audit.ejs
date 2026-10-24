@@ -1,0 +1,49 @@
+<div class="row">
+  <div class="col-md-12">
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/admin">Dashboard</a></li>
+        <li class="breadcrumb-item active">Audit Log</li>
+      </ol>
+    </nav>
+
+    <h2>Administrative Audit Log</h2>
+    <p class="text-muted">Tracks key system actions including stock changes, price updates, order status changes, and user actions.</p>
+
+    <% if (!logs || logs.length === 0) { %>
+      <div class="empty-state text-center py-5">
+        <h3>No audit entries yet</h3>
+        <p class="text-muted">Actions will be logged here as administrators use the system.</p>
+      </div>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table table-hover table-sm">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Actor</th>
+              <th>Action</th>
+              <th>Entity</th>
+              <th>Entity ID</th>
+              <th>IP Address</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% logs.forEach(log => { %>
+              <tr>
+                <td><%= new Date(log.createdAt).toLocaleString() %></td>
+                <td><%= log.actor ? log.actor.name : 'System' %> (<%= log.actor ? log.actor.email : 'N/A' %>)</td>
+                <td><%= log.action %></td>
+                <td><%= log.entityType %></td>
+                <td><%= log.entityId || '-' %></td>
+                <td><%= log.ipAddress || '-' %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+
+    <a href="/admin" class="btn btn-secondary">Back to Dashboard</a>
+  </div>
+</div>

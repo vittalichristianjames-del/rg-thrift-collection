@@ -1,28 +1,92 @@
-<div class="row">
-  <div class="col-md-3">
-    <h4>Categories</h4>
-    <ul class="list-group">
-      <li class="list-group-item"><a href="/products">All Products</a></li>
-      <% categories.forEach(cat => { %>
-        <li class="list-group-item"><a href="/products?category=<%= encodeURIComponent(cat) %>"><%= cat %></a></li>
-      <% }); %>
-    </ul>
+<%
+  const productList = typeof products !== 'undefined' && Array.isArray(products) ? products : [];
+  const rawCategories = typeof categories !== 'undefined' && Array.isArray(categories) ? categories : [];
+  const categoryList = rawCategories
+    .map(category => typeof category === 'string' ? category : category && category.category)
+    .filter(Boolean);
+  const queryFilters = typeof filters !== 'undefined' && filters ? filters : (typeof query !== 'undefined' && query ? query : {});
+  const activeCategory = typeof selectedCategory !== 'undefined' && selectedCategory
+    ? selectedCategory
+    : (queryFilters.category || '');
+  const activeSearch = typeof selectedSearch !== 'undefined' && selectedSearch
+    ? selectedSearch
+    : (queryFilters.search || '');
+  const formatPHP = value => '₱' + (Number(value) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const productStatus = product => String(product.status || ((Number(product.stock) || 0) > 0 ? 'available' : 'sold')).toLowerCase();
+  const statusLabel = status => status === 'reserved' ? 'Reserved' : status === 'sold' ? 'Sold' : 'Available';
+%>
+
+<section class="catalogue-header">
+  <div>
+    <p class="eyebrow">The collection</p>
+    <h1>Find a piece with a past.</h1>
+    <p>Every item is cleaned, checked, and measured by hand before it reaches the rack.</p>
   </div>
-  <div class="col-md-9">
-    <h2>Products</h2>
-    <div class="row">
-      <% products.forEach(product => { %>
-        <div class="col-md-4 mb-4">
-          <div class="card">
-            <img src="<%= product.image || 'https://via.placeholder.com/300' %>" class="card-img-top" alt="<%= product.name %>">
-            <div class="card-body">
-              <h5 class="card-title"><%= product.name %></h5>
-              <p class="card-text">$<%= parseFloat(product.price).toFixed(2) %></p>
-              <a href="/products/<%= product.id %>" class="btn btn-primary">View Details</a>
-            </div>
-          </div>
-        </div>
+  <p class="catalogue-header__count"><strong><%= productList.length %></strong> piece<%= productList.length === 1 ? '' : 's' %> on the rack</p>
+</section>
+
+<section class="catalogue-tools" aria-label="Product filters">
+  <form action="/products" method="GET" class="catalogue-filter-form">
+    <label class="sr-only" for="catalogue-search">Search the collection</label>
+    <div class="search-field">
+      <span aria-hidden="true">&#9906;</span>
+      <input id="catalogue-search" type="search" name="search" value="<%= activeSearch %>" placeholder="Search pieces, styles, or brands">
+    </div>
+    <label class="sr-only" for="catalogue-category">Category</label>
+    <select id="catalogue-category" name="category">
+      <option value="">All categories</option>
+      <% categoryList.forEach(category => { %>
+        <option value="<%= category %>" <%= String(activeCategory) === String(category) ? 'selected' : '' %>><%= category %></option>
+      <% }); %>
+    </select>
+    <button class="button button--primary button--compact" type="submit">Apply</button>
+    <% if (activeSearch || activeCategory) { %>
+      <a class="filter-reset" href="/products">Clear filters</a>
+    <% } %>
+  </form>
+  <% if (categoryList.length) { %>
+    <div class="quick-filters" aria-label="Browse categories">
+      <a class="<%= !activeCategory ? 'is-active' : '' %>" href="/products">All</a>
+      <% categoryList.slice(0, 8).forEach(category => { %>
+        <a class="<%= String(activeCategory) === String(category) ? 'is-active' : '' %>" href="/products?category=<%= encodeURIComponent(category) %>"><%= category %></a>
       <% }); %>
     </div>
-  </div>
-</div>
+  <% } %>
+</section>
+
+<% if (productList.length) { %>
+  <section class="product-grid product-grid--catalogue" aria-label="Products">
+    <% productList.forEach(product => { %>
+      <% const status = productStatus(product); const available = ['available', 'active', 'in_stock'].includes(status); %>
+      <article class="product-card">
+        <a class="product-card__image" href="/products/<%= product.id %>" tabindex="-1" aria-hidden="true">
+          <img src="<%= product.image || '/images/placeholder-garment.svg' %>" data-fallback-src="/images/placeholder-garment.svg" alt="" loading="lazy">
+          <span class="status-chip status-chip--<%= available ? 'available' : status === 'reserved' ? 'reserved' : 'sold' %>"><%= statusLabel(status) %></span>
+          <% if (product.featured) { %><span class="product-card__featured">Featured</span><% } %>
+        </a>
+        <div class="product-card__body">
+          <p class="product-card__category"><%= product.category || 'Curated piece' %></p>
+          <h2><a href="/products/<%= product.id %>"><%= product.name %></a></h2>
+          <% if (product.description) { %><p class="product-card__description"><%= product.description %></p><% } %>
+          <div class="product-card__meta">
+            <strong><%= formatPHP(product.price) %></strong>
+            <% if (product.condition) { %><span><%= product.condition %></span><% } %>
+          </div>
+          <a class="product-card__link" href="/products/<%= product.id %>"><%= available ? 'View details' : 'View piece' %> <span aria-hidden="true">&rarr;</span></a>
+        </div>
+      </article>
+    <% }); %>
+  </section>
+<% } else { %>
+  <section class="empty-state empty-state--catalogue">
+    <span class="empty-state__icon" aria-hidden="true">&#9906;</span>
+    <h2>No pieces found.</h2>
+    <p>Try a different search or return to the full collection. New one-of-one finds land regularly.</p>
+    <a class="button button--primary" href="/products">View all pieces</a>
+  </section>
+<% } %>
+
+<section class="catalogue-note" aria-label="About our inventory">
+  <span aria-hidden="true">&#10022;</span>
+  <p><strong>One piece, one owner.</strong> When an item is reserved or sold, it will no longer be available for checkout.</p>
+</section>

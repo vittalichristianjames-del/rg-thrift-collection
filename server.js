@@ -20,6 +20,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Session
 app.use(session({
@@ -29,10 +30,18 @@ app.use(session({
   cookie: { secure: process.env.NODE_ENV === 'production', maxAge: 24 * 60 * 60 * 1000 }
 }));
 
+// Flash messages middleware
+app.use((req, res, next) => {
+  res.locals.flash = req.session.flash || null;
+  req.session.flash = null;
+  next();
+});
+
 // Make user available in templates
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
   res.locals.recaptchaSiteKey = process.env.RECAPTCHA_SITE_KEY || '';
+  res.locals.formatPHP = value => '₱' + (Number(value) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   next();
 });
 
@@ -42,6 +51,7 @@ app.use('/auth', require('./routes/auth'));
 app.use('/products', require('./routes/products'));
 app.use('/cart', require('./routes/cart'));
 app.use('/checkout', require('./routes/checkout'));
+app.use('/orders', require('./routes/orders'));
 app.use('/admin', require('./routes/admin'));
 
 // 404 handler

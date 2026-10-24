@@ -1,10 +1,20 @@
 <div class="row justify-content-center">
-  <div class="col-md-6 text-center">
-    <h2>Order Confirmed!</h2>
-    <p class="lead">Thank you for your order.</p>
-    <p>Order ID: <%= order.id %></p>
-    <p>Total: $<%= parseFloat(order.total).toFixed(2) %></p>
-    <p>Status: <%= order.status %></p>
-    <a href="/products" class="btn btn-primary">Continue Shopping</a>
+  <div class="col-md-8 text-center">
+    <div class="card p-4">
+      <h2><%= paymentMethod === 'GCash' ? 'Payment Pending Verification' : 'Order Confirmed!' %></h2>
+      <div class="alert <%= paymentMethod === 'GCash' ? 'alert-info' : 'alert-success' %> mb-4">
+        <%= message || (paymentMethod === 'GCash' ? 'Please wait while we verify your GCash payment.' : 'Your order has been placed successfully.') %>
+      </div>
+      <p><strong>Order Number:</strong> <%= order.orderNumber || order.id %></p>
+      <p><strong>Total:</strong> <%= formatPHP(order.total) %></p>
+      <p><strong>Status:</strong> <%= order.paymentStatus || order.status %></p>
+      <% if (paymentMethod === 'COD') { %>
+        <p class="text-muted">Pay the delivery person in cash when your order arrives.</p>
+      <% } else { %>
+        <p class="text-muted">Upload your GCash receipt and reference number for manual verification.</p>
+      <% } %>
+      <a href="/orders" class="btn btn-primary mt-3">View Order History</a>
+      <a href="/products" class="btn btn-outline-secondary mt-3">Continue Shopping</a>
+    </div>
   </div>
 </div>

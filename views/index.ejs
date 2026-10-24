@@ -1,32 +1,139 @@
-<div class="row">
-  <div class="col-md-8">
-    <h1>Welcome to RG Thrift Collection</h1>
-    <p class="lead">Discover unique treasures at affordable prices.</p>
-    <div class="row">
-      <% products.forEach(product => { %>
-        <div class="col-md-4 mb-4">
-          <div class="card">
-            <img src="<%= product.image || 'https://via.placeholder.com/300' %>" class="card-img-top" alt="<%= product.name %>">
-            <div class="card-body">
-              <h5 class="card-title"><%= product.name %></h5>
-              <p class="card-text">$<%= parseFloat(product.price).toFixed(2) %></p>
-              <a href="/products/<%= product.id %>" class="btn btn-primary">View Details</a>
-            </div>
-          </div>
-        </div>
-      <% }); %>
+<%
+  const homeProducts = typeof products !== 'undefined' && Array.isArray(products) ? products : [];
+  const homeFeatured = typeof featured !== 'undefined' && Array.isArray(featured) && featured.length
+    ? featured
+    : homeProducts.slice(0, 4);
+  const latestProducts = homeProducts.slice(0, 8);
+  const homeCategories = [...new Set(homeProducts.map(product => product.category).filter(Boolean))].slice(0, 5);
+  const formatPHP = value => '₱' + (Number(value) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const productStatus = product => String(product.status || ((Number(product.stock) || 0) > 0 ? 'available' : 'sold')).toLowerCase();
+  const statusLabel = status => status === 'reserved' ? 'Reserved' : status === 'sold' ? 'Sold' : 'Available';
+%>
+
+<section class="home-hero">
+  <div class="home-hero__content">
+    <p class="eyebrow">Curated pre-loved clothing</p>
+    <h1>Give great clothes<br>their next chapter.</h1>
+    <p class="home-hero__lede">A considered collection of one-of-one pieces, clearly measured so you can find your fit with confidence.</p>
+    <div class="hero-actions">
+      <a class="button button--primary" href="/products">Shop the collection <span aria-hidden="true">&rarr;</span></a>
+      <a class="button button--text" href="#how-it-works">How it works</a>
     </div>
   </div>
-  <div class="col-md-4">
-    <h3>Featured Items</h3>
-    <% featured.forEach(product => { %>
-      <div class="card mb-3">
-        <div class="card-body">
-          <h5 class="card-title"><%= product.name %></h5>
-          <p class="card-text">$<%= parseFloat(product.price).toFixed(2) %></p>
-          <a href="/products/<%= product.id %>" class="btn btn-sm btn-outline-primary">View</a>
-        </div>
-      </div>
-    <% }); %>
+  <div class="home-hero__art" aria-hidden="true">
+    <div class="hero-orbit hero-orbit--one"></div>
+    <div class="hero-orbit hero-orbit--two"></div>
+    <div class="hero-garment">
+      <span class="hero-garment__hanger"></span>
+      <span class="hero-garment__body"></span>
+      <span class="hero-garment__label">one<br>of one</span>
+    </div>
+    <p class="hero-note">Thoughtfully<br>re-homed</p>
   </div>
-</div>
+</section>
+
+<section class="trust-strip" aria-label="Why shop with RG Thrift">
+  <div><span aria-hidden="true">01</span><p><strong>One-of-one</strong>Every item is unique.</p></div>
+  <div><span aria-hidden="true">02</span><p><strong>Measured by hand</strong>Know the fit before it ships.</p></div>
+  <div><span aria-hidden="true">03</span><p><strong>Local checkout</strong>Pay via COD or GCash.</p></div>
+</section>
+
+<section class="content-section" aria-labelledby="featured-title">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Handpicked for you</p>
+      <h2 id="featured-title">Featured finds</h2>
+    </div>
+    <a class="text-link" href="/products">See everything <span aria-hidden="true">&rarr;</span></a>
+  </div>
+
+  <% if (homeFeatured.length) { %>
+    <div class="product-grid product-grid--feature">
+      <% homeFeatured.forEach(product => { %>
+        <% const status = productStatus(product); const available = ['available', 'active', 'in_stock'].includes(status); %>
+        <article class="product-card">
+          <a class="product-card__image" href="/products/<%= product.id %>" tabindex="-1" aria-hidden="true">
+            <img src="<%= product.image || '/images/placeholder-garment.svg' %>" data-fallback-src="/images/placeholder-garment.svg" alt="" loading="lazy">
+            <span class="status-chip status-chip--<%= available ? 'available' : status === 'reserved' ? 'reserved' : 'sold' %>"><%= statusLabel(status) %></span>
+          </a>
+          <div class="product-card__body">
+            <p class="product-card__category"><%= product.category || 'Curated piece' %></p>
+            <h3><a href="/products/<%= product.id %>"><%= product.name %></a></h3>
+            <div class="product-card__meta">
+              <strong><%= formatPHP(product.price) %></strong>
+              <% if (product.condition) { %><span><%= product.condition %></span><% } %>
+            </div>
+          </div>
+        </article>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <div class="empty-state empty-state--collection">
+      <span class="empty-state__icon" aria-hidden="true">&#10022;</span>
+      <h3>Fresh finds are on the way.</h3>
+      <p>Our next drop is being measured and photographed. Please check back soon.</p>
+      <a class="button button--secondary" href="/products">Browse the collection</a>
+    </div>
+  <% } %>
+</section>
+
+<% if (homeCategories.length) { %>
+  <section class="content-section category-showcase" aria-labelledby="category-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Browse your way</p>
+        <h2 id="category-title">Find your next favorite</h2>
+      </div>
+    </div>
+    <div class="category-pills">
+      <% homeCategories.forEach(category => { %>
+        <a href="/products?category=<%= encodeURIComponent(category) %>"><%= category %> <span aria-hidden="true">&nearr;</span></a>
+      <% }); %>
+      <a href="/products">All pieces <span aria-hidden="true">&nearr;</span></a>
+    </div>
+  </section>
+<% } %>
+
+<section class="content-section latest-section" aria-labelledby="latest-title">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Just added</p>
+      <h2 id="latest-title">Newest on the rack</h2>
+    </div>
+    <a class="text-link" href="/products?sort=newest">Shop new arrivals <span aria-hidden="true">&rarr;</span></a>
+  </div>
+
+  <% if (latestProducts.length) { %>
+    <div class="product-grid">
+      <% latestProducts.forEach(product => { %>
+        <% const status = productStatus(product); const available = ['available', 'active', 'in_stock'].includes(status); %>
+        <article class="product-card">
+          <a class="product-card__image" href="/products/<%= product.id %>" tabindex="-1" aria-hidden="true">
+            <img src="<%= product.image || '/images/placeholder-garment.svg' %>" data-fallback-src="/images/placeholder-garment.svg" alt="" loading="lazy">
+            <span class="status-chip status-chip--<%= available ? 'available' : status === 'reserved' ? 'reserved' : 'sold' %>"><%= statusLabel(status) %></span>
+          </a>
+          <div class="product-card__body">
+            <p class="product-card__category"><%= product.category || 'Curated piece' %></p>
+            <h3><a href="/products/<%= product.id %>"><%= product.name %></a></h3>
+            <div class="product-card__meta">
+              <strong><%= formatPHP(product.price) %></strong>
+              <% if (product.condition) { %><span><%= product.condition %></span><% } %>
+            </div>
+          </div>
+        </article>
+      <% }); %>
+    </div>
+  <% } %>
+</section>
+
+<section id="how-it-works" class="how-it-works" aria-labelledby="how-title">
+  <div>
+    <p class="eyebrow">The RG promise</p>
+    <h2 id="how-title">Clear details. Better secondhand.</h2>
+  </div>
+  <ol>
+    <li><span>1</span><div><strong>Choose a piece</strong><p>Every listing shows its condition, story, and exact measurements.</p></div></li>
+    <li><span>2</span><div><strong>Reserve at checkout</strong><p>We hold your one-of-one find while your order is confirmed.</p></div></li>
+    <li><span>3</span><div><strong>Wear it your way</strong><p>Track delivery from checkout to your doorstep.</p></div></li>
+  </ol>
+</section>

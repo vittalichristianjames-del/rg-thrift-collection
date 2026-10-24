@@ -1,0 +1,89 @@
+<div class="row">
+  <div class="col-md-12">
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/admin">Dashboard</a></li>
+        <li class="breadcrumb-item active">Orders</li>
+      </ol>
+    </nav>
+
+    <h2>Order Management</h2>
+    <% if (typeof verified !== 'undefined' && verified) { %>
+      <div class="alert alert-success">Order payment verified successfully.</div>
+    <% } %>
+    <% if (typeof cancelled !== 'undefined' && cancelled) { %>
+      <div class="alert alert-success">Order cancelled and inventory restored.</div>
+    <% } %>
+    <% if (typeof fulfilled !== 'undefined' && fulfilled) { %>
+      <div class="alert alert-success">Order fulfillment updated.</div>
+    <% } %>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+
+    <% if (!orders || orders.length === 0) { %>
+      <div class="empty-state text-center py-5">
+        <h3>No orders yet</h3>
+        <p class="text-muted">Orders will appear here when customers place them.</p>
+      </div>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Order Number</th>
+              <th>Customer</th>
+              <th>Payment</th>
+              <th>Payment Status</th>
+              <th>Order Status</th>
+              <th>Total</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% orders.forEach(order => { %>
+              <tr>
+                <td><strong><%= order.orderNumber || order.id %></strong></td>
+                <td><%= order.User ? order.User.name : 'Guest' %></td>
+                <td><%= order.paymentMethod === 'cod' ? 'COD' : 'GCash' %></td>
+                <td>
+                  <span class="badge bg-<%= order.paymentStatus === 'paid' ? 'success' : order.paymentStatus === 'awaiting_verification' ? 'warning' : 'secondary' %>">
+                    <%= (order.paymentStatus || order.status).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) %>
+                  </span>
+                </td>
+                <td>
+                  <span class="badge bg-<%= order.status === 'delivered' ? 'success' : order.status === 'cancelled' ? 'danger' : order.status === 'shipped' ? 'info' : order.status === 'processing' ? 'primary' : 'warning' %>">
+                    <%= (order.status || 'pending').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) %>
+                  </span>
+                </td>
+                <td><%= formatPHP(order.total) %></td>
+                <td>
+                  <% if (order.paymentMethod === 'gcash' && order.paymentStatus !== 'paid') { %>
+                    <form action="/admin/orders/<%= order.id %>/verify" method="POST" style="display:inline;" onsubmit="return confirm('Verify this GCash payment?')">
+                      <button type="submit" class="btn btn-sm btn-success">Verify Payment</button>
+                    </form>
+                  <% } %>
+                  <% if (order.status !== 'cancelled' && order.status !== 'expired') { %>
+                    <form action="/admin/orders/<%= order.id %>/cancel" method="POST" style="display:inline; margin-left:5px;" onsubmit="return confirm('Cancel this order? Inventory will be restored.')">
+                      <input type="hidden" name="reason" value="Cancelled by admin">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                    </form>
+                  <% } %>
+                  <% if (order.paymentStatus === 'paid' || order.status === 'paid') { %>
+                    <form action="/admin/orders/<%= order.id %>/fulfill" method="POST" style="display:inline; margin-left:5px;">
+                      <input type="hidden" name="status" value="shipped">
+                      <button type="submit" class="btn btn-sm btn-outline-primary">Mark Shipped</button>
+                    </form>
+                  <% } %>
+                  <a href="/admin/orders" class="btn btn-sm btn-outline-secondary">View</a>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+
+    <a href="/admin" class="btn btn-secondary">Back to Dashboard</a>
+  </div>
+</div>

@@ -1,0 +1,95 @@
+<div class="row">
+  <div class="col-md-10">
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/admin">Dashboard</a></li>
+        <li class="breadcrumb-item active">Sales Reporting</li>
+      </ol>
+    </nav>
+
+    <h2>Sales Reporting</h2>
+
+    <form action="/admin/reporting" method="GET" class="row g-3 mb-4">
+      <div class="col-md-3">
+        <label class="form-label">Start Date</label>
+        <input type="date" class="form-control" name="startDate" value="<%= startDate %>">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">End Date</label>
+        <input type="date" class="form-control" name="endDate" value="<%= endDate %>">
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Generate Report</button>
+      </div>
+    </form>
+
+    <% if (error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="card bg-primary text-white">
+          <div class="card-body">
+            <h5>Total Orders</h5>
+            <h2><%= report.totals ? report.totals.orders : 0 %></h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-success text-white">
+          <div class="card-body">
+            <h5>Total Items Sold</h5>
+            <h2><%= report.totals ? report.totals.items : 0 %></h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-info text-white">
+          <div class="card-body">
+            <h5>Total Revenue</h5>
+            <h2><%= formatPHP(report.totals ? report.totals.revenue : 0) %></h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+          <div class="card-body">
+            <h5>Shipping Collected</h5>
+            <h2><%= formatPHP(report.totals ? report.totals.shipping : 0) %></h2>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <% if (report.rows && report.rows.length > 0) { %>
+      <div class="card">
+        <div class="card-header"><strong>Daily Sales Breakdown</strong></div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr><th>Date</th><th>Orders</th><th>Items</th><th class="text-end">Revenue</th><th class="text-end">Shipping</th></tr>
+              </thead>
+              <tbody>
+                <% report.rows.forEach(row => { %>
+                  <tr>
+                    <td><%= row.date %></td>
+                    <td><%= row.orders %></td>
+                    <td><%= row.items %></td>
+                    <td class="text-end"><%= formatPHP(row.revenue) %></td>
+                    <td class="text-end"><%= formatPHP(row.shipping) %></td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="alert alert-info">No sales data available for the selected date range.</div>
+    <% } %>
+
+    <a href="/admin" class="btn btn-secondary">Back to Dashboard</a>
+  </div>
+</div>
